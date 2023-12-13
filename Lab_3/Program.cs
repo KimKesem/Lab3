@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text.Json;
 using System.Xml.Serialization;
-using System;
+using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -37,14 +37,21 @@ class Program
                     break;
                 case "5":
                     LoadDataFromJson();
+                    Console.WriteLine("Загрузить данные  из Json");
                     break;
                 case "6":
                     SaveDataToXml();
-                    
+                    Console.WriteLine("Сохранить в Xml");
                     break;
                 case "7":
                     LoadDataFromXml();
-                    
+                    Console.WriteLine("Загрузить данные  из Xml");
+                    break;
+                case "8" :
+                    SaveDataToSQLite();
+                    break;
+                case "9" :
+                    SaveDataToSQLite();
                     break;
                 
                 
@@ -63,6 +70,11 @@ class Program
         Console.WriteLine("1. Добавить новую задачу");
         Console.WriteLine("2. Поиск задач по тэгам и вывод N наиболее актуальных задач");
         Console.WriteLine("3. Выйти");
+        Console.WriteLine("4. Сохранить файл в Json");
+        Console.WriteLine("5.  Загрузить данные из существующего списка в формате Json");
+        Console.WriteLine("6.  Сохранить файл в Xml");
+        Console.WriteLine("7. Загрузить данные из существующего списка в формате Xml");
+        
         Console.Write("Выберите пункт меню: ");
     }
 
@@ -73,7 +85,7 @@ class Program
         static void SaveDataToJson()
         {
             string jsonData = JsonSerializer.Serialize(tasks);
-            File.WriteAllText("D:\\hueta\\tasks.json", jsonData);
+            File.WriteAllText("D:\\nah\\Stasks.json", jsonData);
             Console.WriteLine("Данные сохранены в формате JSON.");
         }
        
@@ -81,7 +93,7 @@ class Program
         {
             if (File.Exists("tasks.json"))
             {
-                string jsonData = File.ReadAllText("tasks.json");
+                string jsonData = File.ReadAllText("D:\\nah\\Ltasks.json");
                 tasks = JsonSerializer.Deserialize<List<Task>>(jsonData);
                 Console.WriteLine("Данные загружены из формата JSON.");
             }
@@ -94,7 +106,7 @@ class Program
         static void SaveDataToXml()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<Task>));
-            using (FileStream stream = new FileStream("tasks.xml", FileMode.Create))
+            using (FileStream stream = new FileStream("D:\\nah\\Stasks.xml", FileMode.Create))
             {
                 xmlSerializer.Serialize(stream, tasks);
             }
@@ -106,7 +118,7 @@ class Program
             if (File.Exists("tasks.xml"))
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<Task>));
-                using (FileStream stream = new FileStream("tasks.xml", FileMode.Open))
+                using (FileStream stream = new FileStream("D:\\nah\\Ltasks.xml", FileMode.Open))
                 {
                     tasks = (List<Task>)xmlSerializer.Deserialize(stream);
                 }
@@ -116,6 +128,58 @@ class Program
             {
                 Console.WriteLine("Файл с данными XML не найден.");
             }
+        }
+        static void SaveDataToSQLite()
+        {
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=tasks.db;Version=3;"))
+            {
+                connection.Open();
+
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    command.CommandText = "CREATE TABLE IF NOT EXISTS Tasks (Title TEXT, Description TEXT, DueDate TEXT, Tags TEXT)";
+                    command.ExecuteNonQuery();
+
+                    foreach (Task task in tasks)
+                    {
+                        command.CommandText = $"INSERT INTO Tasks (Title, Description, DueDate, Tags) VALUES ('{task.Title}', '{task.Description}', '{task.DueDate.ToString("yyyy-MM-dd")}', '{string.Join(",", task.Tags)}')";
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            Console.WriteLine("Данные сохранены в базе данных SQLite.");
+        }
+
+        static void LoadDataFromSQLite()
+        {
+            tasks.Clear();
+
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=tasks.db;Version=3;"))
+            {
+                connection.Open();
+
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    command.CommandText = "SELECT * FROM Tasks";
+
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string title = reader["Title"].ToString();
+                            string description = reader["Description"].ToString();
+                            DateTime dueDate = DateTime.ParseExact(reader["DueDate"].ToString(), "yyyy-MM-dd", null);
+                            List<string> tags = reader["Tags"].ToString().Split(',').ToList();
+
+                            Task task = new Task(title, description, dueDate, tags);
+                            tasks.Add(task);
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine("Данные загружены из базы данных SQLite.");
         }
 
         // Existing code...
