@@ -85,7 +85,7 @@ class Program
         static void SaveDataToJson()
         {
             string jsonData = JsonSerializer.Serialize(tasks);
-            File.WriteAllText("D:\\nah\\Stasks.json", jsonData);
+            File.WriteAllText("D:\\hueta\\Stasks.json", jsonData);
             Console.WriteLine("Данные сохранены в формате JSON.");
         }
        
@@ -93,7 +93,7 @@ class Program
         {
             if (File.Exists("tasks.json"))
             {
-                string jsonData = File.ReadAllText("D:\\nah\\Ltasks.json");
+                string jsonData = File.ReadAllText("D:\\hueta\\Ltasks.json");
                 tasks = JsonSerializer.Deserialize<List<Task>>(jsonData);
                 Console.WriteLine("Данные загружены из формата JSON.");
             }
@@ -106,7 +106,7 @@ class Program
         static void SaveDataToXml()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<Task>));
-            using (FileStream stream = new FileStream("D:\\nah\\Stasks.xml", FileMode.Create))
+            using (FileStream stream = new FileStream("D:\\hueta\\Stasks.xml", FileMode.Create))
             {
                 xmlSerializer.Serialize(stream, tasks);
             }
@@ -118,7 +118,7 @@ class Program
             if (File.Exists("tasks.xml"))
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<Task>));
-                using (FileStream stream = new FileStream("D:\\nah\\Ltasks.xml", FileMode.Open))
+                using (FileStream stream = new FileStream("D:\\hueta\\Ltasks.xml", FileMode.Open))
                 {
                     tasks = (List<Task>)xmlSerializer.Deserialize(stream);
                 }
